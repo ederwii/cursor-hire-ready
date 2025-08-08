@@ -1,4 +1,3 @@
-using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -14,9 +13,9 @@ public class GenerateInterview
     }
 
     [Function("GenerateInterview")]
-    public void Run([QueueTrigger("interview-generation", Connection = "ServiceBusConnection")] string message)
+    public void Run([QueueTrigger("interview-generation", Connection = "AzureWebJobsStorage")] string message)
     {
         _logger.LogInformation("GenerateInterview received: {Message}", message);
-        // TODO: enqueue work or call API in future
+        // TODO: perform generation work
     }
 }

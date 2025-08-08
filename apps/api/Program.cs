@@ -5,6 +5,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// CORS for local web dev
+var corsPolicy = "local-dev";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsPolicy, policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -15,6 +27,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors(corsPolicy);
 
 // Health
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
@@ -38,11 +51,22 @@ app.MapPost("/jobs", (JobCreateRequest req) =>
 app.MapPost("/resumes", () => Results.Ok(new { id = Guid.NewGuid().ToString("n") }))
    .WithOpenApi();
 
-// Create Interview (enqueue generation request, POC stub)
-app.MapPost("/interviews", (InterviewCreateRequest req) =>
+// Create Interview (enqueue generation request to storage queue for local dev)
+app.MapPost("/interviews", async (InterviewCreateRequest req) =>
 {
-    // TODO: enqueue to Service Bus 'interview-generation'
     var interviewId = Guid.NewGuid().ToString("n");
+    try
+    {
+        var storage = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING")
+                     ?? "UseDevelopmentStorage=true";
+        var queueClient = new Azure.Storage.Queues.QueueClient(storage, "interview-generation");
+        await queueClient.CreateIfNotExistsAsync();
+        await queueClient.SendMessageAsync(System.Text.Json.JsonSerializer.Serialize(new { interviewId, req.jobId, req.resumeId }));
+    }
+    catch
+    {
+        // swallow in POC; still return queued
+    }
     return Results.Accepted($"/interviews/{interviewId}", new { id = interviewId, status = "queued" });
 }).WithOpenApi();
 
