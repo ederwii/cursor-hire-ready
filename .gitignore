@@ -1,0 +1,25 @@
+# Node
+node_modules/
+dist/
+.build/
+.vite/
+coverage/
+
+# Dotnet
+bin/
+obj/
+*.user
+*.suo
+*.cache/
+TestResult*/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Env
+.env
+.env.*
