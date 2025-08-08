@@ -1,0 +1,20 @@
+name: Docs Refresh
+
+on:
+  push:
+    paths:
+      - 'package.json'
+      - '**/vite.config.*'
+      - '**/*.csproj'
+      - 'Dockerfile'
+      - 'infra/**'
+      - '.github/workflows/**'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh placeholder
+        run: |
+          echo "Docs refresh would run here and open a PR."
